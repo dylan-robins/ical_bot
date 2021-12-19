@@ -35,15 +35,18 @@ class AdeGetterCog(discord_cmds.Cog):
     def cog_unload(self):
         self.update_ical.cancel()
 
-    @discord_tasks.loop(minutes=1)
+    @discord_tasks.loop(hours=24)
     async def update_ical(self):
+        tomorrow = day_with_offset(offset=1)
+        if tomorrow.weekday() > 5:
+            print(f"Skipping updates because tomorrow ({tomorrow}) is the weekend!")
         for channel_id, url in self.bot.urls_by_channel.items:
             print(f"Looking for channel {channel_id} in")
-            for ch in self.bot.get_all_channels:
+            for ch in self.bot.get_all_channels():
                 print(f"  - {ch}")
-            channel = discord.utils.get(self.bot.get_all_channels, id=channel_id)
+            channel = discord.utils.get(self.bot.get_all_channels(), id=channel_id)
 
-            embed = self.bot.construct_embed(url, day_with_offset(offset=1))
+            embed = self.bot.construct_embed(url, tomorrow)
             print(f"Sending updated info to channel {channel_id}")
             await channel.send(embed=embed)
 
