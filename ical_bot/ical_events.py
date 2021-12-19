@@ -3,6 +3,10 @@ from dataclasses import dataclass
 
 from dateutil import tz
 from icalevents.icalevents import events
+import logging
+
+
+logger = logging.getLogger("ical_bot")
 
 UTC_TZ = tz.gettz("UTC")
 CET_TZ = tz.gettz("CET")

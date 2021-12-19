@@ -5,6 +5,7 @@ import datetime
 import json
 from pathlib import Path
 from typing import Union
+import logging
 
 import discord
 import discord.ext.commands as discord_cmds
@@ -18,11 +19,27 @@ intents.typing = False
 intents.presences = False
 
 
+logger = logging.getLogger("ical_bot")
+logger.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler('ical_bot.log')
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(fh)
+logger.addHandler(ch)
+
 async def wait_until(dt: datetime.datetime):
     # sleep until the specified datetime
     now = datetime.datetime.now()
 
-    print(f"Waiting for {(dt - now)} until {dt} ...")
+    logger.debug(f"Waiting for {(dt - now)} until {dt} ...")
     await asyncio.sleep((dt - now).total_seconds())
 
 
@@ -39,15 +56,15 @@ class AdeGetterCog(discord_cmds.Cog):
     async def update_ical(self):
         tomorrow = day_with_offset(offset=1)
         if tomorrow.weekday() > 5:
-            print(f"Skipping updates because tomorrow ({tomorrow}) is the weekend!")
+            logger.info(f"Skipping updates because tomorrow ({tomorrow}) is the weekend!")
         for channel_id, url in self.bot.urls_by_channel.items:
-            print(f"Looking for channel {channel_id} in")
+            logger.debug(f"Looking for channel {channel_id} in")
             for ch in self.bot.get_all_channels():
-                print(f"  - {ch}")
+                logger.debug(f"  - {ch}")
             channel = discord.utils.get(self.bot.get_all_channels(), id=channel_id)
 
             embed = self.bot.construct_embed(url, tomorrow)
-            print(f"Sending updated info to channel {channel_id}")
+            logger.info(f"Sending updated info to channel {channel_id}")
             await channel.send(embed=embed)
 
     @update_ical.before_loop
@@ -62,7 +79,7 @@ class AdeGetterCog(discord_cmds.Cog):
         )
         await self.bot.wait_until_ready()
         await wait_until(desired_time)
-        print("Starting update loop")
+        logger.debug("Starting update loop")
 
 
 class AdeBot(discord_cmds.Bot):
@@ -71,10 +88,10 @@ class AdeBot(discord_cmds.Bot):
         self.urls_by_channel = ChannelUrlDb(db_file)
 
     async def on_ready(self):
-        print("Logged on as {0}!".format(self.user))
+        logger.info("Logged on as {0}!".format(self.user))
 
     def construct_embed(self, url: str, day: datetime.date):
-        print(f"Updating calendar (url = {url})")
+        logger.info(f"Updating calendar (url = {url})")
 
         embedVar = discord.Embed(
             title=f"Agenda for {day.strftime(f'%A %d/%m/%Y')}", color=0x00FF00
@@ -96,7 +113,8 @@ class AdeBot(discord_cmds.Bot):
 if __name__ == "__main__":
     authfile = Path("auth.json")
     if not authfile.is_file():
-        print("Error: couldn't open auth.json file.")
+        logger.critical("Couldn't open auth.json file.")
+        exit(1)
     auth = json.loads(authfile.read_text())
 
     bot = AdeBot("!")
@@ -107,7 +125,7 @@ if __name__ == "__main__":
     async def register_url(ctx, url: str):
         """Sets the iCal calendar url to use in the current channel"""
 
-        print(f"Mapping channel {ctx.channel} to url {url}")
+        logger.info(f"Mapping channel {ctx.channel} to url {url}")
         bot.urls_by_channel.set_record(ctx.channel.id, str(url))
         await ctx.send(f"Saved url {url} for the current channel!")
 
@@ -115,7 +133,7 @@ if __name__ == "__main__":
     async def get(ctx, day: Union[str, int, None] = 0):
         """Show a day's events"""
 
-        print(f"Events requested in channel {ctx.channel} for day {day}")
+        logger.info(f"Events requested in channel {ctx.channel} for day {day}")
 
         if day == "today" or day is None:
             day = day_with_offset()
@@ -126,10 +144,10 @@ if __name__ == "__main__":
                 day = day_with_offset(offset=int(day))
             except ValueError:
                 msg = (
-                    f"Error, couldn't parse {day} as a day offset!\n"
+                    f"Couldn't parse {day} as a day offset!\n"
                     "Accepted values: 'today', 'tomorrow', integers"
                 )
-                print(msg)
+                logger.error(msg)
                 await ctx.send(msg)
 
         if ctx.channel.id not in bot.urls_by_channel.channels:

@@ -1,8 +1,10 @@
 import pickle
 from pathlib import Path
-from pprint import pprint
 from typing import Optional
+import logging
 
+
+logger = logging.getLogger("ical_bot")
 
 class ChannelUrlDb:
     def __init__(self, db_path: Path) -> None:
@@ -11,8 +13,7 @@ class ChannelUrlDb:
         self.records: dict[int, str] = {}
         if db_path.is_file():
             self.records = self.load()
-            print("Loaded records from file:")
-            pprint(self.records)
+            logger.info(f"Loaded {len(self.records)} records from file")
 
     def load(self):
         """Load existing records from a pickle file"""
