@@ -2,3 +2,5 @@
 __pycache__/
 *.pickle
 auth.json
+venv
+*.log

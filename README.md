@@ -6,7 +6,7 @@ A discord bot for keeping track of of your schedule, loading it directly from a 
 
 Install the following:
 
-- A recent version of Python (3.10 preferred, 3.7 probably works but isn't tested)
+- A recent version of Python (Tested with 3.7.3)
 - The following modules (available in pip):
   - discord.py
   - icalevents

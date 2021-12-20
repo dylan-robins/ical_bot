@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import datetime
+import logging
 from dataclasses import dataclass
+from typing import Optional
 
 from dateutil import tz
 from icalevents.icalevents import events
-import logging
-
 
 logger = logging.getLogger("ical_bot")
 
@@ -19,8 +21,19 @@ class Event:
     start: datetime.datetime
     end: datetime.datetime
 
+    def intersects_event(self, other: Event) -> bool:
+        """Returns True if the current event intersects with 'other'"""
+        return self.start <= other.end and self.end >= other.start
 
-def day_with_offset(day=datetime.date.today(), offset: int = 0):
+    def contains_day(self, day: datetime.date) -> bool:
+        """Returns True if the day is contained in the event"""
+        return self.start.date() <= day and self.end.date() >= day
+
+
+def day_with_offset(day: Optional[datetime.date] = None, offset: int = 0):
+    if day is None:
+        day = datetime.date.today()
+
     return day + datetime.timedelta(days=offset)
 
 
