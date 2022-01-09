@@ -93,10 +93,11 @@ class AdeGetterCog(discord_cmds.Cog):
             ):
                 events.extend(get_day_events(record.url, tomorrow))
 
-            # Build and send an embed from the list of events
-            embed = self.bot.construct_embed(events, tomorrow)
-            logger.info(f"Sending updated info to channel {channel_id}")
-            await channel.send(embed=embed)
+            if len(events) > 0:
+                # Build and send an embed from the list of events
+                embed = self.bot.construct_embed(events, tomorrow)
+                logger.info(f"Sending updated info to channel {channel_id}")
+                await channel.send(embed=embed)
 
     @update_ical.before_loop
     async def before_update_ical(self):
@@ -257,22 +258,6 @@ if __name__ == "__main__":
             await ctx.send(
                 "No iCal url registered for current channel!\n"
                 "Register one now by sending `!register_url url_to_ical_calendar`"
-            )
-            return
-
-        # Then load the events from the exclusion calendars
-        skip_channel = False
-        for record in list(
-            bot.url_db.get_records_by_channel(
-                channel_id=ctx.channel.id, role=ICalRole.exclusion_list
-            )
-        ):
-            for e in get_day_events(record.url, day):
-                skip_channel |= e.contains_day(day)
-
-        if skip_channel:
-            logger.info(
-                f"Excluding channel {ctx.channel.id} due to event in exclusion calendar"
             )
             return
 
