@@ -17,7 +17,7 @@ class ICalRole(Enum):
     @staticmethod
     def from_string(val: Optional[str]) -> Optional[ICalRole]:
         # default value:
-        if val is "" or val is None:
+        if val == "" or val is None:
             return ICalRole.event_source
         # else parse known values
         elif val == "event_source":

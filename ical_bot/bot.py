@@ -4,6 +4,7 @@ import asyncio
 import datetime
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Optional, Union
 
@@ -155,13 +156,20 @@ class AdeBot(discord_cmds.Bot):
 
 
 if __name__ == "__main__":
-    authfile = Path("auth.json")
-    if not authfile.is_file():
-        logger.critical("Couldn't open auth.json file.")
+    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+    if not DISCORD_TOKEN:
+        logger.critical("DISCORD_TOKEN environment variable was not set")
         exit(1)
-    auth = json.loads(authfile.read_text())
+    
+    STORAGE_VOLUME = os.getenv("STORAGE_VOLUME")
+    if not STORAGE_VOLUME:
+        logger.critical("STORAGE_VOLUME environment variable was not set")
+        exit(1)
+    
+    DISCORD_TOKEN = DISCORD_TOKEN
+    STORAGE_VOLUME = Path(STORAGE_VOLUME)
 
-    bot = AdeBot("!")
+    bot = AdeBot("!", STORAGE_VOLUME / "records.pickle" )
     cog = AdeGetterCog(bot)
     bot.add_cog(cog)
 
@@ -273,4 +281,4 @@ if __name__ == "__main__":
         logger.info(f"Sending updated info to channel {ctx.channel.id}")
         await ctx.channel.send(embed=embed)
 
-    bot.run(auth["TOKEN"])
+    bot.run(DISCORD_TOKEN)
