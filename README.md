@@ -4,28 +4,27 @@ A discord bot for keeping track of of your schedule, loading it directly from a 
 
 ## Prerequisites
 
-Install the following:
-
-- A recent version of Python (Tested with 3.7.3)
-- The following modules (available in pip):
-  - discord.py
-  - icalevents
-- This module, duh...
-
-Then create an **auth.json** file in the root of your working directory following this template:
-
-```json
-{
-  "TOKEN": "your_bot_token_here"
-}
-```
-
-You will obtain this bot token on the Discord Developer Portal after creating your application and bot.
++ Docker
++ A bot token on the Discord Developer Portal.
 
 ## How to run
 
+Clone the repository to your machine.
+
+Build the docker image:
+
 ```sh
-$ python ical_bot/bot.py
+docker build -t ical_bot .
+```
+
+Run the docker image
+
+```sh
+docker run -b \
+  --env STORAGE_VOLUME=/store \
+  --env DISCORD_TOKEN=YOUR-TOKEN-HERE \
+  --mount source=icalvol,target=/store \
+  ical_bot:latest
 ```
 
 That's it!
